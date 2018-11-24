@@ -1,0 +1,10 @@
+#Importing dataset 
+crime <- read.csv("crime_US.csv")
+
+#Early data exploration
+str(crime)
+summary(crime)
+
+#Data cleaning 
+crime$Geo_UrbanRural <- as.factor(crime$Geo_UrbanRural)
+crime$Year <- as.factor(crime$Year)
