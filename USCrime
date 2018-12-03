@@ -1,131 +1,73 @@
 ---
-title: "CKME 136 - Project - US Crime"
+title: "CKME 136 - Capstone Project - Understanding Causes Linked to US Crime Using Supervised Learning Techniques"
 author: "Vanessa Fernandes"
-date: "November 12, 2018"
-output: html_document
 ---
 
-```{r}
+#load data and transform variables
 
-crime <- read.csv("crime_US.csv")
-
+crime <- read.csv("crime_US.csv") #load data
 str(crime)
-
-crime$Geo_UrbanRural <- as.factor(crime$Geo_UrbanRural)
-
-crime$Year <- as.factor(crime$Year)
-
+crime$Geo_UrbanRural <- as.factor(crime$Geo_UrbanRural) #transform to factor
+crime$Year <- as.factor(crime$Year) #transform to factor
 summary(crime)
 
-```
-
-```{r}
-
-#remove all observations where crime rate is missing
-
-crime <- crime[!is.na(crime$Crime_Violent),]
-
-
-```
-
-```{r}
+crime <- crime[!is.na(crime$Crime_Violent),] #remove all observations where crime rate is missing
 
 #remove all ovbservations with more than half missing values(7)
 
-#add column to sum NA per row
-
-crime$SumNA <- rowSums(is.na(crime))
-
-#remove rows where number of NA is 7 or more
-
-crime <- crime[crime$SumNA < 7,]
-
-#delete NA column
-
-crime <- crime[,-19]
-
-```
-
-```{r}
+crime$SumNA <- rowSums(is.na(crime)) #add column to sum NA per row
+crime <- crime[crime$SumNA < 7,] #remove rows where number of NA is 7 or more
+crime <- crime[,-19] #delete NA column
 
 #replace missing values with mean by state, by year
 ##where no value by year, use state
 
-#LawEnforcement
-
+##LawEnforcement
 crime$LawEnforcement <- with(crime,ave(LawEnforcement,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$LawEnforcement <- with(crime,ave(LawEnforcement,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#Police
-
+##Police
 crime$Police <- with(crime,ave(Police,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$Police <- with(crime,ave(Police,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#Unemployment
-
+##Unemployment
 crime$Unemployment <- with(crime,ave(Unemployment,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$Unemployment <- with(crime,ave(Unemployment,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#Education_GR9
-
+##Education_GR9
 crime$Education_GR9 <- with(crime,ave(Education_GR9,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$Education_GR9 <- with(crime,ave(Education_GR9,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#Families_LoneParent
-
+##Families_LoneParent
 crime$Families_LoneParent <- with(crime,ave(Families_LoneParent,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$Families_LoneParent <- with(crime,ave(Families_LoneParent,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#HHI_BelowPoverty
-
+##HHI_BelowPoverty
 crime$HHI_BelowPoverty <- with(crime,ave(HHI_BelowPoverty,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$HHI_BelowPoverty <- with(crime,ave(HHI_BelowPoverty,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#Population_Youth
-
+##Population_Youth
 crime$Population_Youth <- with(crime,ave(Population_Youth,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$Population_Youth <- with(crime,ave(Population_Youth,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#MentalHealth_Facilities
-
+##MentalHealth_Facilities
 crime$MentalHealth_Facilities <- with(crime,ave(MentalHealth_Facilities,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$MentalHealth_Facilities <- with(crime,ave(MentalHealth_Facilities,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#Citizenship_NonUS
-
+##Citizenship_NonUS
 crime$Citizenship_NonUS <- with(crime,ave(Citizenship_NonUS,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$Citizenship_NonUS <- with(crime,ave(Citizenship_NonUS,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-#Population_Change
-
+##Population_Change
 crime$Population_Change <- with(crime,ave(Population_Change,State,Year,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
-
 crime$Population_Change <- with(crime,ave(Population_Change,State,FUN = function(x) replace(x,is.na(x),mean(x,na.rm = TRUE))))
 
-```
-
-```{r}
-
-#remove remaining NA's
-
-crime <- crime[!is.na(crime$Families_LoneParent),]
+#remove remaining NA's where present
+crime <- crime[!is.na(crime$Families_LoneParent),] 
 crime <- crime[!is.na(crime$Population_Youth),]
 crime <- crime[!is.na(crime$Citizenship_NonUS),]
 
-```
-
-```{r}
-
-#outlier analysis
+#distribution & outlier analysis of all variables
 
 ##Crime Rate
 boxplot(crime$Crime_Violent,main = "Crime Rate")
@@ -134,125 +76,96 @@ qqnorm(crime$Crime_Violent, main = "Crime Rate")
 qqline(crime$Crime_Violent,col="red")
 
 ##Law Enforcement
-
 boxplot(crime$LawEnforcement)
 hist(crime$LawEnforcement)
 qqnorm(crime$LawEnforcement)
 qqline(crime$LawEnforcement,col="red")
 
 ##Police
-
 boxplot(crime$Police)
 hist(crime$Police)
 qqnorm(crime$Police)
 qqline(crime$Police,col="red")
 
 ##Unemployment
-
 boxplot(crime$Unemployment)
 hist(crime$Unemployment)
 qqnorm(crime$Unemployment)
 qqline(crime$Unemployment,col="red")
 
 ##Education_GR9
-
 boxplot(crime$Education_GR9)
 hist(crime$Education_GR9)
 qqnorm(crime$Education_GR9)
 qqline(crime$Education_GR9,col="red")
 
 ##Education_HSorMore
-
 boxplot(crime$Education_HSorMore)
 hist(crime$Education_HSorMore)
 qqnorm(crime$Education_HSorMore)
 qqline(crime$Education_HSorMore,col="red")
 
 ##Families_LoneParent
-
 boxplot(crime$Families_LoneParent)
 hist(crime$Families_LoneParent)
 qqnorm(crime$Families_LoneParent)
 qqline(crime$Families_LoneParent,col="red")
 
 ##HHI_Median
-
 boxplot(crime$HHI_Median)
 hist(crime$HHI_Median)
 qqnorm(crime$HHI_Median)
 qqline(crime$HHI_Median,col="red")
 
 ##HHI_BelowPoverty
-
 boxplot(crime$HHI_BelowPoverty)
 hist(crime$HHI_BelowPoverty)
 qqnorm(crime$HHI_BelowPoverty)
 qqline(crime$HHI_BelowPoverty,col="red")
 
 ##Population_Youth
-
 boxplot(crime$Population_Youth)
 hist(crime$Population_Youth)
 qqnorm(crime$Population_Youth)
 qqline(crime$Population_Youth,col="red")
 
 ##MentalHealth
-
 boxplot(crime$MentalHealth_Facilities)
 hist(crime$MentalHealth_Facilities)
 qqnorm(crime$MentalHealth_Facilities)
 qqline(crime$MentalHealth_Facilities,col="red")
 
 ##Citizenship
-
 boxplot(crime$Citizenship_NonUS)
 hist(crime$Citizenship_NonUS)
 qqnorm(crime$Citizenship_NonUS)
 qqline(crime$Citizenship_NonUS,col="red")
 
 ##Population density
-
 boxplot(crime$Population_Density)
 hist(crime$Population_Density)
 qqnorm(crime$Population_Density)
 qqline(crime$Population_Density,col="red")
 
 ##Population Change
-
 boxplot(crime$Population_Change)
 hist(crime$Population_Change)
 qqnorm(crime$Population_Change)
 qqline(crime$Population_Change,col="red")
 
 ##Geo_UrbanRural
-
 plot(crime$Geo_UrbanRural)
 
-```
-
-```{r}
-
+#duplicate dataframe for upcoming steps 
 crime2 <- crime
-
-```
-
-```{r}
 
 #convert crime rate to class (3 classes: low, medium, high)
 
-#install.packages("gtools")
+install.packages("gtools") #install gtools package if not already installed
+library("gtools") #load package
+crime2$Crime_Violent_Class <- quantcut(crime2$Crime_Violent,q=3) #divide crime rate to class variable
 
-#library("gtools")
-
-crime2$Crime_Violent_Class <- quantcut(crime2$Crime_Violent,q=3)
-
-```
-
-```{r}
-
-#normalize numeric variables using sqrt function
-
-#crime2[,4:16] <- lapply(crime2[,4:16],sqrt)
+#normalize numeric variables using cube root function
 
 crime2[,4:16] <- crime2[,4:16]^(1/3)
 
@@ -260,243 +173,104 @@ cbrt <- function(x) {
     sign(x) * abs(x)^(1/3)
 }
 
-crime2$Population_Change <- cbrt(crime2$Population_Change)
+crime2$Population_Change <- cbrt(crime2$Population_Change) #apply above function for instances where variable has positive and negative values
 
-
-#crime2$Population_Change <- sqrt(crime2$Population_Change + 1 - min(crime2$Population_Change))
-
-```
-
-```{r}
-
-##correlation analysis
+#conduct correlation analysis
 
 cor <- cor(crime2[,4:17],method = "pearson",use="complete.obs")
-
-#library(corrplot)
-
+install.packages("corrplot") #install corrplot package if not already installed
+library(corrplot) #load package
 corrplot(cor,type = "lower",tl.col = "black")
 
-```
 
-```{r}
+#information gain analysis
 
-# Information gain analysis
-
-#install.packages("FSelector")
-
-#library("FSelector")
-
+install.packages("FSelector") #install FSelector package if not already installed
+library("FSelector") #load package
 weights <- information.gain(Crime_Violent_Class~.,crime2)
 
-weights
-
-```
-
-```{r}
-
-# Remove highly correlated variables - Education_GR9 (lower info gain)
+#based on correlation and information gain analysis, remove highly correlated variables (LawEnforcement and Education_GR9)
 
 crime2 <- crime2[,-5]
-
 crime2 <- crime2[,-7]
 
-```
+#building classifiers
 
-```{r}
+install.packages("h2o") #install h2o package
+library(h2o) #load package
+h2o.init() #initialize cluster
+h2o.removeAll() #remove existing data, if any
 
-# Load h2o packages 
-
-install.packages("h2o")
-
-library(h2o)
-
-h2o.init()
-
-h2o.removeAll()
-
-```
-
-```{r}
-
-#Identify predictors and response
-
+##identify predictors and response
 y <- "Crime_Violent_Class"
-
 x <- names(crime2[,5:16])
 
-```
-
-```{r}
-
-# Number of CV folds
-
+##identify default number of CV folds
 nfolds <- 5
 
-```
-
-```{r}
-
-#Set up data and define training, valid, test sets 
+##load data into h2o frame and define training, valid, test sets 
 
 finaldata <- as.h2o(crime2)
-
 splits <- h2o.splitFrame(finaldata,c(0.6,0.2),seed=1234)
-
 train <- h2o.assign(splits[[1]],"train.hex")
 valid <- h2o.assign(splits[[2]],"valid.hex")
 test <- h2o.assign(splits[[3]],"test.hex")
+train[,y] <- as.factor(train[,y]) #ensure response variable is factor variable
+valid[,y] <- as.factor(valid[,y]) #ensure response variable is factor variable
+test[,y] <- as.factor(test[,y]) #ensure response variable is factor variable
 
-train[,y] <- as.factor(train[,y])
-
-test[,y] <- as.factor(test[,y])
-
-```
-
-```{r}
-
-#DRF model
+##DRF models
 
 my_drf1 <- h2o.randomForest(x=x,y=y,training_frame = train,validation_frame = valid, nfolds = nfolds, fold_assignment = "Modulo",keep_cross_validation_predictions = TRUE,seed = 1)
+my_drf2 <- h2o.randomForest(x=x,y=y,training_frame = train,validation_frame = valid, nfolds = nfolds,ntrees =200, stopping_rounds = 5, score_each_iteration = T, fold_assignment = "Modulo",keep_cross_validation_predictions = TRUE,seed = 1)
+my_drf3 <- h2o.randomForest(x=x,y=y,training_frame = train,validation_frame = valid, nfolds = 10,ntrees =200, stopping_rounds = 5, score_each_iteration = T, fold_assignment = "Modulo",keep_cross_validation_predictions = TRUE,seed = 1)
+my_drf4 <- h2o.randomForest(x=x,y=y,training_frame = train,validation_frame = valid, nfolds = 15, ntrees =200, stopping_rounds = 5, score_each_iteration = T, fold_assignment = "Modulo",keep_cross_validation_predictions = TRUE,seed = 1)
 
-summary(my_drf1)
-
-my_drf1@model$validation_metrics
-
-#plot((h2o.performance(my_drf1,newdata = test)), type = 'roc')
-
-my_drf2 <- h2o.randomForest(x=x,y=y,training_frame = train,validation_frame = valid, nfolds = nfolds,ntrees =200, stopping_rounds = 2, score_each_iteration = T, fold_assignment = "Modulo",keep_cross_validation_predictions = TRUE,seed = 1)
-
-summary(my_drf2)
-
-my_drf3 <- h2o.randomForest(x=x,y=y,training_frame = train,validation_frame = valid, nfolds = 10,ntrees =200, stopping_rounds = 2, score_each_iteration = T, fold_assignment = "Modulo",keep_cross_validation_predictions = TRUE,seed = 1)
-
-summary(my_drf3)
-
-my_drf4 <- h2o.randomForest(x=x,y=y,training_frame = train,validation_frame = valid, nfolds = 15, ntrees =200, stopping_rounds = 2, score_each_iteration = T, fold_assignment = "Modulo",keep_cross_validation_predictions = TRUE,seed = 1)
-
-summary(my_drf4)
-
-```
-
-```{r}
-
-#predictions
-
-finaldrf_predictions <- h2o.predict(object = my_drf4, newdata = test)
-
-finaldrf_predictions 
-
-h2o.hit_ratio_table(my_drf4,valid = T)[1,2] #validation set accuracy
-
-mean(finaldrf_predictions$predict==test$Crime_Violent_Class) #test set accuracy
-
-```
-
-
-```{r}
-
-#GBM model
+##GBM models
 
 my_gbm1 <- h2o.gbm(x = x, y = y, training_frame = train,validation_frame = valid, distribution = "multinomial",nfolds = nfolds,fold_assignment = "Modulo",keep_cross_validation_predictions = TRUE,seed = 1)
+my_gbm2 <- h2o.gbm(x = x, y = y, training_frame = train,validation_frame = valid, distribution = "multinomial",nfolds = 10,fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE,seed = 1)
+my_gbm3 <- h2o.gbm(x = x, y = y, training_frame = train,validation_frame = valid, distribution = "multinomial",nfolds = nfolds,fold_assignment = "Modulo",ntrees = 20, stopping_rounds = 5, learn_rate = 0.2, max_depth = 10, score_each_iteration = T, keep_cross_validation_predictions = TRUE,seed = 1)
+my_gbm4 <- h2o.gbm(x = x, y = y, training_frame = train,validation_frame = valid, distribution = "multinomial",nfolds = nfolds,fold_assignment = "Modulo",ntrees = 30, stopping_rounds = 5,learn_rate = 0.3, max_depth = 10, score_each_iteration = T, keep_cross_validation_predictions = TRUE,seed = 1)
 
-summary(my_gbm1)
-
-my_gbm1@model$validation_metrics
-
-my_gbm2 <- h2o.gbm(x = x, y = y, training_frame = train,validation_frame = valid, distribution = "multinomial",nfolds = nfolds,fold_assignment = "Modulo",ntrees = 20, learn_rate = 0.2, max_depth = 10, keep_cross_validation_predictions = TRUE,seed = 1)
-
-summary(my_gbm2)
-
-my_gbm2@model$validation_metrics
-
-my_gbm3 <- h2o.gbm(x = x, y = y, training_frame = train,validation_frame = valid, distribution = "multinomial",nfolds = nfolds,fold_assignment = "Modulo",ntrees = 30, learn_rate = 0.3, max_depth = 10, keep_cross_validation_predictions = TRUE,seed = 1)
-
-summary(my_gbm3)
-
-my_gbm3@model$validation_metrics
-
-my_gbm4 <- h2o.gbm(x = x, y = y, training_frame = train,validation_frame = valid, distribution = "multinomial",nfolds = 15,fold_assignment = "Modulo",ntrees = 30, learn_rate = 0.3, max_depth = 10, keep_cross_validation_predictions = TRUE,seed = 1)
-
-summary(my_gbm4)
-
-my_gbm4@model$validation_metrics
-
-```
-```{r}
-
-#predictions
-
-finalgbm_predictions <- h2o.predict(object = my_gbm4, newdata = test)
-
-finalgbm_predictions 
-
-h2o.hit_ratio_table(my_gbm4,valid = T)[1,2] #validation set accuracy
-
-mean(finalgbm_predictions$predict==test$Crime_Violent_Class) #test set accuracy
-
-```
-
-```{r}
-
-#GLM model
+##GLM models
 
 my_glm1 <- h2o.glm(x=x,y=y,training_frame = train,validation_frame = valid, family = "multinomial",nfolds = nfolds,fold_assignment = "Modulo",score_each_iteration = T, keep_cross_validation_predictions = TRUE,seed = 1)
+my_glm2 <- h2o.glm(x=x,y=y,training_frame = train,validation_frame = valid, family = "multinomial",nfolds = 10,fold_assignment = "Modulo",score_each_iteration = T, keep_cross_validation_predictions = TRUE,seed = 1)
+my_glm3 <- h2o.glm(x=x,y=y,training_frame = train,validation_frame = valid, family = "multinomial",nfolds = 5,fold_assignment = "Modulo",score_each_iteration = T,lambda = 0.0001, keep_cross_validation_predictions = TRUE,seed = 1)
+my_glm4 <- h2o.glm(x=x,y=y,training_frame = train,validation_frame = valid, family = "multinomial",nfolds = 5,fold_assignment = "Modulo",score_each_iteration = T,lambda = 0.00001, keep_cross_validation_predictions = TRUE,seed = 1)
 
-summary(my_glm1)
+##Building ensemble models
 
-my_glm1@model$validation_metrics
+##metalearner = DRF
 
-my_glm2 <- h2o.glm(x=x,y=y,training_frame = train,validation_frame = valid, family = "multinomial",nfolds = 15,fold_assignment = "Modulo",score_each_iteration = T, keep_cross_validation_predictions = TRUE,seed = 1)
+my_ensemble1 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "drf", base_models = list(my_drf2,my_gbm1,my_glm4))
+drf_params <- list(ntrees = 100, stopping_rounds = 5) #identify model parameters
+my_ensemble2 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "drf", metalearner_params = drf_params, base_models = list(my_drf2,my_gbm1,my_glm4))
+my_ensemble3 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "drf", metalearner_params = drf_params, base_models = list(my_drf2,my_gbm1))
+my_ensemble4 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "drf", metalearner_params = drf_params, base_models = list(my_drf2,my_glm4))
+my_ensemble5 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "drf", metalearner_params = drf_params, base_models = list(my_gbm1,my_glm4))
 
-summary(my_glm2)
+##metalearner = GBM
 
-my_glm2@model$validation_metrics
+my_ensemble6 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "gbm", base_models = list(my_drf2,my_gbm1,my_glm4))
+gbm_params <- list(ntrees = 20, stopping_rounds = 5, learn_rate = 0.2, max_depth = 10) #identify model parameters
+my_ensemble7 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "gbm", metalearner_params = gbm_params, base_models = list(my_drf2,my_gbm1,my_glm4))
+my_ensemble8 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "gbm", base_models = list(my_drf2,my_gbm1))
+my_ensemble9 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "gbm", base_models = list(my_drf2,my_glm4))
+my_ensemble10 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "gbm", base_models = list(my_gbm1,my_glm4))
 
+##metalearner = GLM
+my_ensemble11 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "glm", base_models = list(my_drf2,my_gbm1,my_glm4))
+glm_params <- list(lambda = 0.00001) #identify model parameters
+my_ensemble12 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "glm", metalearner_params = glm_params, base_models = list(my_drf2,my_gbm1,my_glm4))
+my_ensemble13 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "glm", metalearner_params = glm_params, base_models = list(my_drf2,my_gbm1))
+my_ensemble14 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "glm", metalearner_params = glm_params, base_models = list(my_drf2,my_glm4))
+my_ensemble15 <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,validation_frame = valid, metalearner_nfolds = 5, metalearner_fold_assignment = "Modulo", metalearner_algorithm = "glm", metalearner_params = glm_params, base_models = list(my_gbm1,my_glm4))
 
-my_glm3 <- h2o.glm(x=x,y=y,training_frame = train,validation_frame = valid, family = "multinomial",nfolds = 15,fold_assignment = "Modulo",score_each_iteration = T,lambda = 0.0001, keep_cross_validation_predictions = TRUE,seed = 1)
+#evaluate performance on test set and compare to base learner performance
 
-summary(my_glm3)
-
-my_glm3@model$validation_metrics
-
-```
-```{r}
-
-#predictions
-
-finalglm_predictions <- h2o.predict(object = my_glm3, newdata = test)
-
-finalglm_predictions 
-
-h2o.hit_ratio_table(my_glm3,valid = T)[1,2] #validation set accuracy
-
-mean(finalglm_predictions$predict==test$Crime_Violent_Class) #test set accuracy
-
-```
-
-```{r}
-
-#Naive Bayes
-
-my_naive <- h2o.naiveBayes(x=x,y=y,training_frame = train, validation_frame = valid,nfolds = 15,score_each_iteration = T, fold_assignment = "Modulo", keep_cross_validation_predictions = TRUE, seed = 1)
-
-summary(my_naive)
-
-```
-
-```{r}
-
-#Building ensemble model
-
-my_ensemble <- h2o.stackedEnsemble(x=x,y=y, training_frame = train,base_models = list(my_gbm4,my_glm3,my_drf4))
-
-```
-
-```{r}
-
-#evaluate performance
-
-perf <- h2o.performance(my_ensemble, newdata = test)
-
-```
+drf_perf <- h2o.performance(my_drf2, newdata = test)
+gbm_perf <- h2o.performance(my_gbm1, newdata = test)
+glm_perf <- h2o.performance(my_glm4, newdata = test)
+ensemble_perf <- h2o.performance(my_ensemble13, newdata = test)
